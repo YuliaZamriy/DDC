@@ -8,6 +8,8 @@
 
 #setwd("C:/Users/yzamriy/Documents/Tools and Methodology/DS/Git/DDS")
 setwd("/home/yulia/Documents/Career/DDS/")
+
+install.packages("tidyverse")
 library(tidyverse)
 
 Projects <- read_csv("DDC_sampledata Projects.csv")
