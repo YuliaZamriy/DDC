@@ -18,3 +18,18 @@ datefor <- function(x) as.Date(x, format = '%Y-%m-%d')
 Schedule[,3:51] <- lapply(Schedule[,3:51], datefor)
 
 table(Schedule$ProjectedProjectStart)
+
+str(Projects$ProjectId)
+str(Schedule$ProjectId)
+str(Budget$project_id)
+
+Fulldata1 <- Projects %>% 
+  inner_join(Schedule, by = "ProjectId") 
+
+Fulldata2 <- Schedule %>% 
+  inner_join(Budget, by = c("ProjectId" = "project_id"))
+
+table(Budget$project_id)
+
+Projects$ProjectId2 <- gsub("-","",Projects$ProjectId)
+
