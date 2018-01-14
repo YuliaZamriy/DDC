@@ -6,7 +6,8 @@
 # allSitesDataFrame$title # Names of each dataset
 #Schedule <- read_csv("DDC_sampledata Schedule.csv", col_types = ctypes)
 
-setwd("C:/Users/yzamriy/Documents/Tools and Methodology/DS/Git/DDS")
+#setwd("C:/Users/yzamriy/Documents/Tools and Methodology/DS/Git/DDS")
+setwd("/home/yulia/Documents/Career/DDS/")
 library(tidyverse)
 
 Projects <- read_csv("DDC_sampledata Projects.csv")
