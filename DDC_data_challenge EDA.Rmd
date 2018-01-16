@@ -14,23 +14,24 @@ knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
 
 ## Framework Overview
 
-The main assignment of this challenge is to idenitfy factors that may influence project durations. However, this assignment can have multiple interpretations. After exploring provided sample data, I outlined project framework in the following manner:
+The main assignment of this challenge is to idenitfy factors that may influence project durations. However, since there might be multiple ways to interpret that task, I performed preliminary data exploration and outlined project framework in the following manner:
 
-**How do I measure project duration?** There are multiple types of dates: actual, original, projected etc. During data processing stage I realized that the best set of dates to use is "original" (see notes in the data prep document). Hence, I defined project duration as number of days between project start date and project closeout dates. 
+**What is my universe (available data)?** After exploring NYC Open Data, I decided to use only sample data file provided (the datasets I found on Open Data had a lot less information available). Moreover, I limited the analysis only to projects that had non-missing original project start and closeout dates (the reasons behind this decision are explained the data prep document). 
+This is probably a backwards approach (I used it due to time/resource constraints). While approaching this type of problems, my first step is usually to identify what data fits analysis needs and then obtain it. Instead, here I am building my analysis using available data. 
 
-**What is my universe?** After exploring NYC Open Data, I decided to use only sample data file provided (the datasets I found on Open Data had a lot less information available). Moreover, I limited the analysis only to projects that had non-missing original project start and closeout dates. 
+**How do I measure project duration?** There are multiple types of dates in sample dataset: actual, original, projected etc. During data processing stage I realized that the best set of dates to use is "original" (see notes in the data prep document). Hence, I defined project duration as number of days between project start date and project closeout dates. 
 
-**What factors am I going to consider?** This is the most challenging part. First of all, there are factors provided in the sample file and there are all other external factors (macroeconomic, weather, environment, fiscal etc.). Unfortunately, I did not have time to explore the impact of the latter. As for the former, I had to limit the pool of factors as well due to several reasons (i.e., laborious text processing for project descriptions and low match rates with available budget data). Hence, I focused my analysis on the following factors:
+**What factors am I going to consider?** This is the most challenging part. First of all, there are factors provided in the sample file and there are all other external factors (macroeconomic, weather, environment, fiscal etc.). Unfortunately, I did not have time to explore the impact of the latter. As for the former, I had to limit the pool of factors as well (for example, low match rates with available budget data). Hence, I focused my analysis on the following factors:
 
-- Division Name, Project Type, Borough, Sponsor, Design Contract Type, Construction Contract Type (I selected these because I could interpret their values to some extent and they had enough variation in project duration to be interesting)
+- Division Name, Project Type, Borough, Sponsor, Design Contract Type, Construction Contract Type (I selected these because I could interpret their values to some extent and they had enough variation in project duration to appeared interesting)
 
 - Project seasonality based on the month the project started (I selected this because it might be reflective of how/when budgets become available. Though I couldn't test this hypothesis)
 
 - Relative duration of each project stage (Since there are distinct stages for each project, I decided to examine if duration of certain stages can potentially impact total duration of a project)
 
-However, I would say the main question I have in general:
-**Why do we need to know these factors? What are we going to do with findings?**
-The main reason I am asking is because, in general, there are factors of two types: *controllable* and *non-controllable*. If DDC wants to use the results of this type of analysis to improve project durations, my focus would need to be on controllable factors. But because I don't know what factors can be manipulated, it is hard to provide actionable recommendations. Instead, this analysis is more exploratory and descriptive.
+And my main question in general was:
+**How this type of analysis is used in decision making? what is the ultimate goal?**
+From my perspective, there are factors of two types: *controllable* and *non-controllable*. If DDC wants to use the results of this type of analysis to improve project durations, my focus would need to be on controllable factors (while controlling for non-controllable). But because I don't know what factors can be manipulated, it is hard to provide actionable recommendations. Instead, this analysis is more exploratory and descriptive.
 
 ## Exploratory Data Analysis
 
@@ -66,7 +67,9 @@ axis(side=2,
      cex.axis = 0.6)
 ```
 
-Based on the above histogram, it appears that most of the projects in the sample data last between 3 and 10 years (1,000 and 4,000 days) with a long tail to the right (up to 30-year projects). However, I don't have any insight on how representative this sample is of the entire population of projects.
+*Based on the above*:
+
+It appears that most of the projects in the sample data last between 3 and 10 years (1,000 and 4,000 days) with a long tail to the right (up to 30-year projects). However, How representative is this sample is of the entire population of projects? If I had access to the full dataset I would test the relationship between provided sample and full list of projects.
 
 **Average Project Duration by Selected Factors**
 
@@ -131,23 +134,24 @@ FullData %>%
   arrange(desc(AvgProjDur))
 ```
 
-Based on the above:
+*Based on the above*:
 
 - "Infrastructure" projects have longer duration compared to "Public Buildings"
 
-- The most time-consuming projects are on Staten Island, but most of the projects are in Brooklyn and their average duration is second to the ones on SI
+- The most time-consuming projects are on Staten Island. But most of the projects are in Brooklyn and their average duration is second highest across all boroughs
 
 - The most time-consuming projects are sponsored by "Transportation" and "Environmental Protection" (I assume that "Trans." in "Trans. & Env. Protection" stands for "Transportation")
 
-- There are 139 "Street Reconstruction" projects with average duration of 10 years (3,791 days)
+- "Street Reconstruction" projects have the longest average duration 10 years (3,791 days). And there are the most common type (along with "Upgrade")
 
 - Top 3 Design Contract Types by duration are Consultant-related
 
 - Top 2 Construction Contract Types by duration are aslo Consultant-related
 
-It is actually hard to draw any solid conclusions on this data because a lot of variable values are not clear (for example, "Requirements TO" contract types have long durations. But what does "Requirements TO" mean?)
+It is actually hard to draw any solid conclusions on this data because a lot of variable values are not clear (for example, "Requirements TO" contract types have long durations. But what does "Requirements TO" mean?).
+Also, I would need to test if these "insights" are reflective of the entire population. To do this, I would need to use a different sample of project ids to ensure that I'm not confirming a "self-fulfiling prophecy".
 
-After some additional exploration, I discovered an interesting pattern: the most time consuming Infrastructure projects are done in Brooklyn. This is true across most common type project types. For the analysis below I arbitrarily selected types with more than 30 projects to ensure reasonable coverage across boroughs.
+After some additional exploration, I discovered an interesting pattern: the most time consuming Infrastructure projects are done in Brooklyn. This is true across most common project types. For the analysis below I arbitrarily selected types with more than 30 projects to ensure reasonable coverage across boroughs.
 
 *Infrastructure projects duration by Project Type*
 
@@ -195,21 +199,21 @@ ggplot(ByBorough, aes(Borough, AvgProjDur, fill = Borough)) +
   
 ```
 
-Based on the charts above:
+*Based on the above*:
 
 - Brooklyn has the largest number of Infrastructure projects
 
-- Brooklyn has the longest Infrastructure projects on average across all major project types
+- Brooklyn has the longest Infrastructure projects on average across all major project types (however, it doesn't always appear to be significantly longer. This would need to be tested on a different sample)
 
 Potential reasons for the above are:
 
-- Sample file was not representative of the entire population of projects
+- Sample file was not representative of the entire population of projects 
 
 - Brooklyn is a high priority borough for large scale projects
 
-- Brooklyn infrastructure is lacking behind other boroughs
+- Brooklyn infrastructure is lacking behind other boroughs and it takes longer to fix/upgrade it
 
-However, all of the above are speculations that I cannot support using available data (at least within allocated time to submit this assignment).
+However, all of the above are speculations that I cannot support using available data.
 
 
 **Average Project Duration by Month**
@@ -248,7 +252,7 @@ ggplot(ProjectStartMonthDivName, aes(OrgProjectStartMonth, n)) +
 grid.arrange(avedur, numproj)
 ```
 
-Based on the above:
+*Based on the above*:
 
 - Infrastructure projects that start at the beginning of the year (especially, in February and March) are longer in duration compared to projects starting at the end of the year. However, I would need to run additional testing to find out if there are significant differences across months and if I am properly controling for all potential confounding effects
 
@@ -257,7 +261,7 @@ Based on the above:
 
 **Project Duration Stages**
 
-During the data prep I constructed a few variables to capture project duration composition. For example, what % of total duration is Initiation stage? 
+During data prep stage I constructed a few variables to capture project duration composition. For example, what % of total duration is Initiation stage? 
 Is there any relationship between overall project duration and how much time is spent in each phase? 
 
 See below correlations between project duration and shares of each stage:
@@ -269,11 +273,11 @@ round(cor(FullData[,  c("OrgProjectDur", "OrgInitiationDurPct", "OrgDesignDurPct
 
 The strongest correlation is with the share of time spent in the initiation stage. There might be a few reasons for that:
 
-- Longer projects require more time being allocated to the initiation stage (for example, it takes longer to secure budgets and get approvals)
+- Longer projects require more time allocated to the initiation stage (for example, it takes longer to secure budgets and get approvals)
 
 - Projects that take longer to initiate belong to agencies that are not good at planning
 
-However, if we zoom in on Infrastructure projects, the relationship between two variables is not clear. I would say there is at least one confounding factor that is contributing to different relationships between total duration and the share of tome allocated to the initition stage.
+However, if we zoom in on Infrastructure projects, the relationship between two variables is not clear. I would say there is at least one confounding factor that is contributing to different relationships between total duration and the share of tome allocated to the initition stage (it appears that the data splits into two upward trends).
 
 ```{r infra}
 ggplot(FullData[FullData$DivisionName == "Infrastructure",], 
@@ -305,17 +309,23 @@ ggplot(FullData[FullData$DivisionName == "Public Buildings",],
         plot.title = element_text(size = 10))
 ```
 
+*Based on the above*:
+
+- There is a need for deeper analysis to examine the relationship between overall project duration and project stages. The key there would be to identify different groups of projects with different relationships
+
 ### Areas for Improvement
 
-If I had more time (and more resources) I would:
+The next steps for this analysis would be:
 
-- Identify main goals for this analysis. How is this analysis going to be used in decision making? To answer this question I would need to conduct interviews with different stakeholders.
+- Identify main goals for this analysis. How is this analysis going to be used in decision making? To answer this question I would need to conduct interviews with different stakeholders
 
-- Instead of answering key question based on the available data, I would identify data that fits analysis needs and then task my team to obtain that data.
+- Instead of answering key question based on the available data, I would identify data that fits analysis needs and then task my team to obtain that data
 
-- Spend more time exploring data to make sure everyone understands it. Also, it would be important to split factors into controllable vs. non-controllable to make sure that final analysis results are actionable.
+- Spend more time exploring data to make sure everyone understands it. Also, it would be important to split factors into controllable vs. non-controllable to make sure that final analysis recommendations are actionable
 
-- It's hard to identify proper statistical methodology for this analysis without having all the data at hand. But I think the final output to stakeholders would contain a list of factors they can control with assigned level of importance. It would also be helpful to build a simulation that shows how changing different factors affects main KPI.
+- It's hard to identify proper statistical methodology for this analysis without having all the data at hand. Whatever methodology is chosen, it would need to control properly for all the confounding factors (Division Name, Project Type etc.) as they seem to determine project durations to a large extent
+
+- After proper analysis, the final output to stakeholders would contain a list of factors they can control with assigned level of importance. Also, I would work with my team to build a simulation that allows to create different scenarios for controllable/non-controllable factors and respective impact on the main KPI.
 
 
 

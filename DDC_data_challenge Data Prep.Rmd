@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 
 ## Overview
 
-This is a support file for my response to DDC Data Challenge. It contains the code for creating the main analytical dataset. Please note that I kept only those pieces of code that were explictly used to build final data. A lot of "exploratory" code has been left out for simplicity and clarity reasons. However, I can provide it upon request.
+This is a support file for my response to DDC Data Challenge. It contains the code for creating the main analytical dataset. Please note that I kept only those pieces of code that were explictly used (with a few exceptions) to build final dataset. A lot of "exploratory" code has been left out for simplicity and clarity reasons. I can provide it upon request.
 
 ### Step 1. Read in the data
 
@@ -45,7 +45,7 @@ str(Schedule$ProjectId)
 str(Budget$project_id)
 ```
 
-However, it appears that Project ID in the *Budget* dataset has slightly different format than in the other two. Hence, I made an explicit assumption that by removing "-" in Project IDs I achieve more consistency across keys without changing underlying relationships.
+However, it appeared that Project ID in the *Budget* dataset had a slightly different format than in the other two. Hence, I made an explicit assumption that by removing "-" in Project IDs I achieve more consistency across keys without changing underlying relationships.
 
 ```{r}
 Projects$ProjectId2 <- sub("-","",Projects$ProjectId)
@@ -53,7 +53,7 @@ Schedule$ProjectId2 <- sub("-","",Schedule$ProjectId)
 Budget$ProjectId2 <- sub("-","",Budget$project_id)
 ```
 
-Then it appeared that there the datasets are not unique on the Project ID level.
+Then it appeared that the three datasets are not unique on the Project ID level.
 
 ```{r}
 nrow(Projects)
@@ -64,20 +64,20 @@ nrow(Budget)
 length(unique(Budget$ProjectId2))
 ```
 
-Hence, more processing is required to understand the nature of duplicates.
+Hence, more processing was required to understand the nature of duplicates.
 
-### Step 2. Process *Schedule* data
+### Step 2. Processing *Schedule* data
 
 Schedule data contains dates for different stages of projects. Therefore, this data is key to answering the main challenge question.
 
-However, all the dates have been read in as character variables. I converted them to date format before anything else.
+However, all the dates have been read in as character variables. I converted them to date format before doing anything else.
 
 ```{r}
 datefor <- function(x) as.Date(x, format = '%Y-%m-%d')
 Schedule[,3:51] <- lapply(Schedule[,3:51], datefor)
 ```
 
-As stated in the analysis overview document, I defined my key metric as number of days between project start date and closeout dates. The schedule contained many different types of dates: projected, original, actual etc. After some data exploration I chose to use *original project dates* to calculate project durations. At first, I wanted to use *actual project dates*, however, there were very few projects with non-missing actual project closeout dates. It might be due to the way this sample file was generated. Original closeout date had much better coverage in the file.
+As stated in the analysis overview document, I defined my key metric as number of days between project start and closeout dates. The schedule contained many different types of dates: projected, original, actual etc. After some data exploration I chose to use *original project dates* to calculate project durations. At first, I wanted to use *actual project dates*, however, there were very few projects with non-missing actual project closeout dates. It might be due to the way this sample file was generated. Original closeout date had much better coverage in the file.
 
 The code below creates a subset of Schedule data as following:
 
@@ -102,10 +102,8 @@ ScheduleSub <- Schedule %>%
   mutate(
          OrgInitiationDur = as.numeric(OrgDesignStart - OrgProjectStart),
          OrgDesignDur = as.numeric(OrgConstructionStart - OrgDesignStart),
-         OrgConstructionDur = 
-           as.numeric(OrgConstructionCompletion - OrgConstructionStart),
-         OrgCloseoutDur = 
-           as.numeric(OrgProjectCloseout - OrgConstructionCompletion),
+         OrgConstructionDur = as.numeric(OrgConstructionCompletion - OrgConstructionStart),
+         OrgCloseoutDur = as.numeric(OrgProjectCloseout - OrgConstructionCompletion),
          OrgProjectDur = as.numeric(OrgProjectCloseout - OrgProjectStart),
          OrgInitiationDurPct = round(OrgInitiationDur / OrgProjectDur, 2),
          OrgDesignDurPct = round(OrgDesignDur / OrgProjectDur, 2),
@@ -121,11 +119,12 @@ ScheduleSub <- Schedule %>%
 nrow(ScheduleSub)
 ```
 
-### Step 3. Process *Projects* data
+### Step 3. Processing *Projects* data
 
-Projects data contains descriptive information of each project. There are a lot of comlumns containing useful information. But for this analysis I decided to focus on a selected few that seemed most relevant. If I had more time, I would have performed some text analysis of long text fields to identify any patterns that could be used for this assignment.
+Projects data contains descriptive information for Project IDs. There are a lot of comlumns containing useful information. But for this analysis I decided to focus on a selected few that seemed most relevant to me. If I had more time, I would have performed some text analysis of long text fields to identify any patterns that could be used for this assignment.
 
 ```{r}
+# Createing a subsed of Projects data
 ProjectsSub <- Projects %>% 
   select(ProjectId, ProjectId2,
          DivisionName,
@@ -160,7 +159,7 @@ nrow(ProjectsSub)
 length(unique(ProjectsSub$ProjectId))
 ```
 
-Based on the above number, it appears that there are still duplicate rows. Data exploration showed that most of them are complete duplicates. Hence, it's safe to remove them.
+Based on the above numbers, it appeared that there were till duplicate rows. Data exploration showed that most of them were complete duplicates. Hence, it was safe to remove them.
 
 ```{r}
 ProjectsSub <- ProjectsSub[!duplicated(ProjectsSub), ]
@@ -168,16 +167,16 @@ nrow(ProjectsSub)
 length(unique(ProjectsSub$ProjectId))
 ```
 
-### Step 4. Process *Budgets* data
+### Step 4. Processing *Budgets* data
 
-This data contains budgets for various projects. However, as shown at the beginning of this document, there are only around 200 unique Project IDs covered by this data. On the other hand, Projects and Schedule files contain alomost a thousand of unique Project IDs. Moreover, the overlap of projects across all three files was even smaller. At the end I decided not to use the Budgets data for the analysis because I did not know the reasons behind low match rates. Was it because of how sample data was pulled? Or was it because of how budget data for projects was generated?
+This data contains budgets for various projects. However, as shown at the beginning of this document, there were only 214 unique Project IDs covered by this data. On the other hand, Projects and Schedule files contain alomost a thousand of unique Project IDs. Moreover, the overlap of projects across all three files was even smaller. At the end I decided not to use the Budgets data for the analysis because I did not know the reasons behind low match rates. Was it because of how sample data was pulled? Or was it because of how budget data for projects was generated?
 In any case, I don't think it would be valid to draw any conclusions based on the small pool of projects with budget data.
 
-However, since I had to process the data to make this decision, I am providing the code to prepare Budget data for the analysis.
+However, since I had to process the data to make this decision, I am providing the code to prepare Budget data for the analysis. If I were to do this analysis again, I would probably requested to get a larger file with budget numbers. Another important note about Budget dataset. Unllike to others, it was not unique at Project ID, but rather on Project ID + pobject. Hence, I had to do a different type of processing for it.
 
 The following code does the following:
 
-- Aggregates different types of budgets by Project ID and pobject variables because each project in this file is broken out by pobject (with values corresponding to Construction, Continegency, Design, etc.)
+- Aggregates different types of budgets by *Project ID* and *pobject* variables because each project in this file is broken out by pobject (with values corresponding to Construction, Continegency, Design, etc.)
 
 - Aggregates different types of budgets by Project ID
 
@@ -237,6 +236,8 @@ FullDataWBudget <- ScheduleSub %>%
 summary(FullDataWBudget$PlannedAmtTtl)
 ```
 
+PlannedAmtTtl has 570 missing values. Missing values in this case correspond to un-matched Project IDs. 
+
 ### Step 5. Creating Analytical Dataset
 
 Since I decided not to use Budget data, I merged Schedule and Projects data by the original Project ID. I also filtered out all the rows that had missing data for Original Project Duration variable because I selected it as the main variable of interest.
@@ -254,4 +255,4 @@ dim(FullData)
 save(FullData, file = "DDCChallenegeAnalysisData.RData")
 ```
 
-Our final analytical dataset contains **598** unique Project IDs. 
+My final analytical dataset contains **598** unique Project IDs. 
