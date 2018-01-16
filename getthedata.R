@@ -1,19 +1,17 @@
 #setwd("C:/Users/yzamriy/Documents/Tools and Methodology/DS/Git/DDS")
-setwd("/home/yulia/Documents/Career/DDS/")
+#setwd("/home/yulia/Documents/Career/DDS/")
+setwd("C:/Users/Zamriyka/Documents/GitHub/DDS")
 
 library(tidyverse)
+library(gridExtra)
 
 Projects <- read_csv("DDC_sampledata Projects.csv")
-#ctypes <- paste("cc", strrep("D", 49), sep = '')
 Schedule <- read_csv("DDC_sampledata Schedule.csv")
 Budget <- read_csv("DDC_sampledata Budget.csv")
 
 #str(Projects)
 #str(Schedule)
 #str(Budget)
-
-datefor <- function(x) as.Date(x, format = '%Y-%m-%d')
-Schedule[,3:51] <- lapply(Schedule[,3:51], datefor)
 
 #table(Schedule$ProjectedProjectStart)
 
@@ -83,6 +81,9 @@ Budget_aggr[is.na(Budget_aggr)] <- 0
 #summary(Budget_aggr)
 
 #summary(Schedule)
+
+datefor <- function(x) as.Date(x, format = '%Y-%m-%d')
+Schedule[,3:51] <- lapply(Schedule[,3:51], datefor)
 
 AllDates <- data.frame(AllDates = colnames(Schedule[,3:52]), row.names = NULL)
 
@@ -209,20 +210,36 @@ FullData$ProjectId2.y <- NULL
 FullData$ProjectId2 <- FullData$ProjectId2.x
 FullData$ProjectId2.x <- NULL
 
+save(FullData, file = "FullData.Rdata")
+
 summary(FullData$OrgProjectDur)
 
+dev.off()
 hist(FullData$OrgProjectDur, 
      breaks = seq(0, 12000, 500) - 250,
-     ylim = range(0:200),
-     main = "Histogram for Original Project Duration (in days)",
-     xlab = NULL)
-axis(side=1, at=seq(0,12000, 1000), labels=seq(0, 12000, 1000))
+     main = "Histogram for Original Project Duration (in Days)",
+     xlab = NULL,
+     cex.main = 1,
+     xaxt = "n",
+     yaxt = "n",
+     col = "lightgrey")
+axis(side=1, 
+     at=seq(0, 12000, 1000), 
+     labels=seq(0, 12000, 1000), 
+     cex.axis = 0.5)
+axis(side=2, 
+     at=seq(0, 200, 50), 
+     labels=seq(0, 200, 50), 
+     cex.axis = 0.6)
 
 FullData %>% 
   group_by(DivisionName) %>% 
   summarize(AvgProjDur = mean(OrgProjectDur),
             n = n()) %>% 
   arrange(desc(AvgProjDur))
+
+t.test(FullData$OrgProjectDur[FullData$DivisionName == "Infrastructure"],
+       FullData$OrgProjectDur[FullData$DivisionName == "Public Buildings"])
 
 FullData %>% 
   group_by(UnitName) %>% 
@@ -267,13 +284,86 @@ FullData %>%
   arrange(desc(AvgProjDur))
 
 FullData %>% 
+  filter(DivisionName == "Infrastructure") %>% 
+  group_by(ProjectType) %>% 
+  summarize(AvgProjDur = mean(OrgProjectDur),
+            n = n()) %>% 
+  arrange(desc(AvgProjDur))
+
+FullData %>% 
+  filter(DivisionName == "Infrastructure") %>% 
+  group_by(Borough) %>% 
+  summarize(AvgProjDur = mean(OrgProjectDur),
+            n = n()) %>% 
+  arrange(desc(AvgProjDur))
+
+FullData %>% 
+  filter(DivisionName == "Infrastructure" & 
+           (grepl("Trans", Sponsor) | grepl("Protection", Sponsor))) %>% 
+  group_by(Borough) %>% 
+  summarize(AvgProjDur = mean(OrgProjectDur),
+            n = n()) %>% 
+  arrange(desc(AvgProjDur))
+
+ProjectTypes = c("Street Reconstruction", "Water", "Other", "Ped Ramps", "Sidewalks")
+
+ByBorough2 <- FullData %>% 
+  filter(DivisionName == "Infrastructure" &
+           ProjectType %in% ProjectTypes) %>% 
+  group_by(Borough, ProjectType) %>% 
+  summarize(AvgProjDur = mean(OrgProjectDur)) 
+  
+ggplot(ByBorough2, aes(Borough, AvgProjDur, fill = Borough)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~ProjectType) +
+  scale_fill_brewer(palette="Accent") +
+  ylab("Original Average Project Duration") +
+  ggtitle("Average Duration (in Days) for Selected Infrastructure Projects by Borough") +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.y = element_text(size = 8),
+        axis.text.y = element_text(size = 6),
+        plot.title = element_text(size = 10)) 
+  
+  
+FullData %>% 
   group_by(OrgProjectStartMonth) %>%  
   summarize(AvgProjDur = mean(OrgProjectDur),
             n = n()) %>% 
   arrange(desc(AvgProjDur))
 
-DurCor <-cor(FullData[,  c("OrgProjectDur", "OrgInitiationDurPct", "OrgDesignDurPct", "OrgConstructionDurPct", "OrgCloseoutDurPct")], 
-             use = "pairwise")[-1, 1]
+round(cor(FullData[,  c("OrgProjectDur", "OrgInitiationDurPct", "OrgDesignDurPct", "OrgConstructionDurPct", "OrgCloseoutDurPct")], 
+             use = "pairwise")[-1, 1], 2)
+
+round(cor(FullData[,  c("OrgInitiationDur", "OrgDesignDur", "OrgConstructionDur", "OrgCloseoutDur")], 
+             use = "pairwise"),2)
+
+ggplot(FullData[FullData$DivisionName == "Infrastructure",], 
+       aes(OrgInitiationDurPct, OrgProjectDur , color = Borough)) + 
+  geom_point() +
+  xlab("Share of Initiation Stage in Total Duration") +
+  ylab("Average Project Duration") +
+  ggtitle("Infrastructure Projects Overal Duration vs. Initiation Stage") +
+  theme(axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 8),
+        plot.title = element_text(size = 10))
+
+ggplot(FullData[FullData$DivisionName == "Public Buildings",], 
+       aes(OrgInitiationDurPct, OrgProjectDur , color = Borough)) + 
+  geom_point() +
+  xlab("Share of Initiation Stage in Total Duration") +
+  ylab("Average Project Duration") +
+  ggtitle("Public Building Projects Overal Duration vs. Initiation Stage") +
+  theme(axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 8),
+        plot.title = element_text(size = 10))
+
+grid.arrange(infra, pub)
 
 ProjectStartMonth <- 
   FullData %>% 
@@ -284,50 +374,165 @@ ProjectStartMonth <-
 ggplot(ProjectStartMonth, aes(OrgProjectStartMonth, AvgProjDur)) +
   geom_bar(stat = "identity") +
   xlab("Original Project Start Month") +
-  ylab("Original Average Project Duration") +
-  theme_light()
+  ylab("Original Average Project Duration") 
 
 ggplot(ProjectStartMonth, aes(OrgProjectStartMonth, n)) +
   geom_bar(stat = "identity") +
   xlab("Original Project Start Month") +
-  ylab("Number of Projects by Start Month") +
-  theme_light()
+  ylab("Number of Projects by Start Month") 
+
+a <- 
+ggplot(ProjectStartMonthDivName, 
+       aes(OrgProjectStartMonth, 
+           AvgProjDur)) +
+  geom_bar(stat = "identity", fill = "darkblue") +
+  xlab("Original Project Start Month") +
+  ylab("Average Project Duration (in days)") +
+  facet_grid(.~DivisionName) +
+  theme(axis.title.x = element_text(size = 7),
+        axis.title.y = element_text(size = 7))
 
 ProjectStartMonthDivName <- 
   FullData %>% 
   group_by(OrgProjectStartMonth, DivisionName) %>%  
   summarize(AvgProjDur = mean(OrgProjectDur),
             n = n())
-
-ProjectStartMonthUnit <- 
-  FullData %>% 
-  group_by(OrgProjectStartMonth, UnitName) %>%  
-  summarize(AvgProjDur = mean(OrgProjectDur),
-            n = n())
-
-ProjectStartMonthBorough <- 
-  FullData %>% 
-  group_by(OrgProjectStartMonth, Borough) %>%  
-  summarize(AvgProjDur = mean(OrgProjectDur),
-            n = n())
-
-ProjectStartMonthSponsor <- 
-  FullData %>% 
-  group_by(OrgProjectStartMonth, Sponsor) %>%  
-  summarize(AvgProjDur = mean(OrgProjectDur),
-            n = n())
-
-ProjectStartMonthType <- 
-  FullData %>% 
-  group_by(OrgProjectStartMonth, ProjectType) %>%  
-  summarize(AvgProjDur = mean(OrgProjectDur),
-            n = n())
-
-ggplot(ProjectStartMonthDivName, aes(OrgProjectStartMonth, AvgProjDur, fill = DivisionName)) +
-  geom_bar(stat = "identity") +
+b <-
+ggplot(ProjectStartMonthDivName, aes(OrgProjectStartMonth, n)) +
+  geom_bar(stat = "identity", fill = "darkgreen") +
   xlab("Original Project Start Month") +
-  ylab("Original Average Project Duration") +
+  ylab("Number of Projects") +
   facet_grid(.~DivisionName) +
-  theme_light()
+  theme(axis.title.x = element_text(size = 7),
+        axis.title.y = element_text(size = 7))
+
+grid.arrange(a, b)
+
+cor(as.numeric(FullData$OrgProjectStartMonth), FullData$OrgProjectDur)
+
+FullData %>% 
+  filter(DivisionName == "Public Buildings") %>% 
+  select(OrgProjectStartMonth, OrgProjectDur) %>% 
+  mutate(OrgProjectStartMonth = as.numeric(OrgProjectStartMonth)) %>% 
+  cor()
+
+
+# UnitName <- 
+#   FullData %>% 
+#   group_by(UnitName) %>%  
+#   summarize(AvgProjDur = mean(OrgProjectDur),
+#             n = n())
+# 
+# ggplot(UnitName, aes(UnitName, AvgProjDur)) +
+#   geom_bar(stat = "identity") +
+#   theme(axis.text.x = element_text(angle = 90, size = 7), 
+#         axis.title.y = element_text(size = 7),
+#         plot.title = element_text(size = 10, hjust = 0.5)) +
+#   xlab("Unit Name") +
+#   ylab("Original Average Project Duration (in days)") +
+#   ggtitle("Average Project Duration by Unit Name")
+#   
+# Borough <- 
+#   FullData %>% 
+#   group_by(Borough) %>%  
+#   summarize(AvgProjDur = mean(OrgProjectDur),
+#             n = n())
+# 
+# ggplot(Borough, aes(Borough, AvgProjDur)) +
+#   geom_bar(stat = "identity") +
+#   theme(axis.text.x = element_text(angle = 90, size = 7), 
+#         axis.title.y = element_text(size = 7),
+#         plot.title = element_text(size = 10, hjust = 0.5)) +
+#   xlab("Borough") +
+#   ylab("Original Average Project Duration (in days)") +
+#   ggtitle("Average Project Duration by Borough")
+
+Sponsor <- 
+  FullData %>% 
+  group_by(Sponsor) %>%  
+  summarize(AvgProjDur = mean(OrgProjectDur),
+            n = n())
+
+ggplot(Sponsor, aes(x = reorder(Sponsor, -AvgProjDur), y = AvgProjDur)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, size = 7), 
+        axis.title.y = element_text(size = 7),
+        plot.title = element_text(size = 10, hjust = 0.5)) +
+  xlab("Sponsor") +
+  ylab("Original Average Project Duration (in days)") +
+  ggtitle("Average Project Duration by Sponsor")
+
+ProjectType <- 
+  FullData %>% 
+  group_by(ProjectType) %>%  
+  summarize(AvgProjDur = mean(OrgProjectDur),
+            n = n())
+
+ggplot(ProjectType, aes(x = reorder(ProjectType, -AvgProjDur), y = AvgProjDur)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, size = 7), 
+        axis.title.y = element_text(size = 7),
+        plot.title = element_text(size = 10, hjust = 0.5)) +
+  xlab("Project Type") +
+  ylab("Original Average Project Duration (in days)") +
+  ggtitle("Average Project Duration by Project Type")
+
+Priority <- 
+  FullData %>% 
+  group_by(Priority) %>%  
+  summarize(AvgProjDur = mean(OrgProjectDur),
+            n = n())
+
+#q_priority1 <-
+ggplot(Priority, aes(x = reorder(Priority, -AvgProjDur), y = AvgProjDur)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, size = 7), 
+        axis.title.y = element_text(size = 7),
+        plot.title = element_text(size = 10, hjust = 0.5)) +
+  xlab("Priority") +
+  ylab("Original Average Project Duration (in days)") +
+  ggtitle("Average Project Duration by Priority")
+
+#q_priority2 <-
+ggplot(Priority, aes(x = reorder(Priority, -AvgProjDur), y = n)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, size = 7), 
+        axis.title.y = element_text(size = 7),
+        plot.title = element_text(size = 10, hjust = 0.5)) +
+  xlab("Priority") +
+  ylab("Number of Projects") +
+  ggtitle("Average Project Duration by Priority")
+
+#grid.arrange(q_priority1, q_priority2)
+
+DesignType <- 
+  FullData %>% 
+  group_by(DesignContractType) %>%  
+  summarize(AvgProjDur = mean(OrgProjectDur),
+            n = n())  
+
+ggplot(DesignType, aes(x = reorder(DesignContractType, -AvgProjDur), y = AvgProjDur)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, size = 7), 
+        axis.title.y = element_text(size = 7),
+        plot.title = element_text(size = 10, hjust = 0.5)) +
+  xlab("Design Contract Type") +
+  ylab("Original Average Project Duration (in days)") +
+  ggtitle("Average Project Duration by Design Contract Type")
+
+ConstrType <- 
+  FullData %>% 
+  group_by(ConstructionContractType) %>%  
+  summarize(AvgProjDur = mean(OrgProjectDur),
+            n = n())  
+
+ggplot(ConstrType, aes(x = reorder(ConstructionContractType, -AvgProjDur), y = AvgProjDur)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, size = 7), 
+        axis.title.y = element_text(size = 7),
+        plot.title = element_text(size = 10, hjust = 0.5)) +
+  xlab("Construction Contract Type") +
+  ylab("Original Average Project Duration (in days)") +
+  ggtitle("Average Project Duration by Construction Contract Type")
 
 
