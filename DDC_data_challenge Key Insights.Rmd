@@ -1,0 +1,41 @@
+---
+title: "DDC Data Challenge: Summary"
+author: "Yulia Zamriy"
+date: "January 15, 2018"
+output:
+  pdf_document: default
+  html_document:
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
+```
+
+### Key Question
+
+What factors may impact project durations?
+
+### Summary of Findings
+
+**Insight #1:** The duration of infrastructure projects is related to projects start month: projects starting in February/March are longer on average than those starting around Q3. On the other hand, most of the projects start in Q3. 
+No such relationship is observed for Public Buildings projects. 
+
+**Recommendation:** If possible, shift larger (hence, potentially more time consuming) projects starts towards the end of the year (Q4) when there are less other projects starting. Potentially, this might improve the duration of the initiation stage as there are more resources available.
+
+**Insight #2:** The duration of Initiation stage is positively correlated to overall projects duration. 
+
+**Recommendation:** Shorten the duration of processes involved in the initiation stages to potentially decrease overall project duration at higher rate.
+
+**Insight #3:** The longest infrastructure projects across major types (i.e., street reconstruction, water, sidewalks, pedestrian ramps) are done in Brooklyn.
+
+**Recommendation:** Investigate project management processes in Brooklyn to identify why this borough is lagging compared to other City parts in terms of project duration.
+
+### Key Assumptions
+
+- For the purposes of this document, provided sample data is assumed to be representative of the entire population of City projects. No tests have been performed to validate this hypothesis.
+
+- None of the key insights listed in this document have been tested for statistical significance. In order to confirm/dispprove them I would need to obtain a different sample of projects to perform appropriate statistical tests. 
+
+- Insights are derived based on the observed relationships. Recommendations are provided with an assumption that cause/effect relationships exist. However, this hasn't been tested.
+

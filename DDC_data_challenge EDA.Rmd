@@ -254,7 +254,7 @@ grid.arrange(avedur, numproj)
 
 *Based on the above*:
 
-- Infrastructure projects that start at the beginning of the year (especially, in February and March) are longer in duration compared to projects starting at the end of the year. However, I would need to run additional testing to find out if there are significant differences across months and if I am properly controling for all potential confounding effects
+- Infrastructure projects that start at the beginning of the year (especially, in February and March) are longer in duration compared to projects starting around Q3. However, I would need to run additional testing to find out if there are significant differences across months and if I am properly controling for all potential confounding effects
 
 - The duration of Public Buildings projects don't seem depend on month
 
@@ -313,9 +313,7 @@ ggplot(FullData[FullData$DivisionName == "Public Buildings",],
 
 - There is a need for deeper analysis to examine the relationship between overall project duration and project stages. The key there would be to identify different groups of projects with different relationships
 
-### Areas for Improvement
-
-The next steps for this analysis would be:
+## Next Steps
 
 - Identify main goals for this analysis. How is this analysis going to be used in decision making? To answer this question I would need to conduct interviews with different stakeholders
 
@@ -325,7 +323,7 @@ The next steps for this analysis would be:
 
 - It's hard to identify proper statistical methodology for this analysis without having all the data at hand. Whatever methodology is chosen, it would need to control properly for all the confounding factors (Division Name, Project Type etc.) as they seem to determine project durations to a large extent
 
-- After proper analysis, the final output to stakeholders would contain a list of factors they can control with assigned level of importance. Also, I would work with my team to build a simulation that allows to create different scenarios for controllable/non-controllable factors and respective impact on the main KPI.
+- After proper analysis, the final output to stakeholders would contain a list of factors they can control with assigned level of importance. Also, I would work with my team to build a simulation tool that allows to create multiple scenarios for different levels of controllable/non-controllable factors and how those changes affect main KPIs.
 
 
 
